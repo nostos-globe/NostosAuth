@@ -32,7 +32,9 @@ func main() {
 	// Rutas
 	r.POST("/register", handler.Register)
 	r.POST("/login", handler.Login)
-	r.POST("/reset-password", handler.ResetPassword)
+	//r.POST("/reset-password", handler.ResetPassword)
+	r.POST("/update-password", handler.UpdatePassword)
+	r.POST("/profile", handler.Profile)
 
 	// Iniciar servidor
 	log.Println("Servidor corriendo en http://localhost:8080")
