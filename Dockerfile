@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Usa la versión de Go compatible con tu proyecto
 FROM golang:1.24 AS builder
 
@@ -22,6 +23,9 @@ RUN go build -o auth-service ./cmd/main.go
 
 # Imagen final para producción (más ligera)
 FROM gcr.io/distroless/base-debian12
+=======
+FROM golang:1.24 AS builder
+>>>>>>> e7d130ddf8a0b1b03123163ee2e954505532178b
 
 WORKDIR /app
 
