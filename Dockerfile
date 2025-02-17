@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Usa la versión de Go compatible con tu proyecto
 FROM golang:1.24 AS builder
 
