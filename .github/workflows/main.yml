@@ -22,4 +22,4 @@ jobs:
       - name: Build and Push Docker Image to GHCR
         run: |
           IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/auth-service:latest
-          docker buildx build --platform linux/arm64 --build-arg GOARCH=arm64 -t $IMAGE_NAME --push .
+          docker buildx build --platform linux/arm64 --build-arg CGO_ENABLED=0 --build-arg GOOS=linux --build-arg GOARCH=arm64 -t $IMAGE_NAME --push .
