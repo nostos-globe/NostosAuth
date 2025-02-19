@@ -1,38 +1,32 @@
-# Use a minimal Go image with Alpine for faster builds
-FROM golang:1.24-alpine AS builder
+# Usa la versión de Go compatible con tu proyecto
+FROM golang:1.24 AS builder
 
-# Install dependencies
-RUN apk add --no-cache git
-
-# Set working directory
+# Define el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Copy Go module files and download dependencies
+# Copia los archivos de Go Modules
 COPY go.mod go.sum ./
+
+# Descarga las dependencias
 RUN go mod download
 
-# Copy the rest of the source code
+# Copia el resto del código fuente al contenedor
 COPY . .
 
-# Verify that files are copied correctly (for debugging)
+# Verifica que los archivos han sido copiados correctamente (debug)
 RUN ls -lah /app
 
-# Set environment variables for cross-compilation
-ENV CGO_ENABLED=0 GOOS=linux GOARCH=arm64
-
-# Build the service
+# Compila el servicio
 RUN go build -o auth-service ./cmd/main.go
 
-# Use a lightweight final image
-FROM alpine:latest
+
+# Imagen final para producción (más ligera)
+FROM gcr.io/distroless/base-debian12
 
 WORKDIR /app
 
-# Copy only the compiled binary
+# Copia el binario compilado desde el builder
 COPY --from=builder /app/auth-service .
 
-# Ensure the binary is executable
-RUN chmod +x /app/auth-service
-
-# Run the service
+# Ejecuta el servicio
 CMD ["/app/auth-service"]
