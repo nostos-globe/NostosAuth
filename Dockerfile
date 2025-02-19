@@ -1,36 +1,32 @@
 # Usa la versión de Go compatible con tu proyecto
 FROM golang:1.24 AS builder
 
-# Set the target platform for ARM (Raspberry Pi)
-ENV GOOS=linux
-ENV GOARCH=arm
-ENV GOARM=7
-
-# Set working directory
+# Define el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Copy Go modules files
+# Copia los archivos de Go Modules
 COPY go.mod go.sum ./
 
-# Download dependencies
+# Descarga las dependencias
 RUN go mod download
 
-# Copy source code
+# Copia el resto del código fuente al contenedor
 COPY . .
 
-# Verify files (debug)
+# Verifica que los archivos han sido copiados correctamente (debug)
 RUN ls -lah /app
 
-# Build the service for ARM
-RUN CGO_ENABLED=0 go build -o auth-service ./cmd/main.go
+# Compila el servicio
+RUN go build -o auth-service ./cmd/main.go
 
-# Final stage
-FROM arm32v7/debian:bullseye-slim
+
+# Imagen final para producción (más ligera)
+FROM gcr.io/distroless/base-debian12
 
 WORKDIR /app
 
-# Copy the binary from builder
+# Copia el binario compilado desde el builder
 COPY --from=builder /app/auth-service .
 
-# Run the service
+# Ejecuta el servicio
 CMD ["/app/auth-service"]
