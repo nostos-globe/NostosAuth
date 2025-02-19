@@ -1,29 +1,27 @@
 package db
 
 import (
-	"fmt"
-	"log"
+    "fmt"
+    "log"
 
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
+    "gorm.io/driver/postgres"
+    "gorm.io/gorm"
 
-	"main/pkg/config"
+    "main/pkg/config"
 )
 
 func ConnectDB(cfg *config.Config) (*gorm.DB, error) {
-	// Formatear la cadena de conexión
-	log.Printf("Intentando conectar a la base de datos: host=%s user=%s dbname=%s port=%s",
-		cfg.DBHost, cfg.DBUser, cfg.DBName, cfg.DBPort)
+    log.Printf("Attempting to connect to database: host=%s user=%s dbname=%s port=%s",
+        cfg.DBHost, cfg.DBUser, cfg.DBName, cfg.DBPort)
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
+    dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Europe/Madrid",
+        cfg.DBHost, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBPort)
 
-	// Intentar conectar a la base de datos
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		return nil, fmt.Errorf("error al conectar la base de datos: %w", err)
-	}
+    db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+    if err != nil {
+        return nil, fmt.Errorf("failed to connect to database: %w", err)
+    }
 
-	log.Println("Base de datos conectada y migraciones aplicadas correctamente.")
-	return db, nil
+    log.Println("Database connected successfully.")
+    return db, nil
 }

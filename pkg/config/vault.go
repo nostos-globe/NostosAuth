@@ -36,16 +36,27 @@ func (vc *VaultConfig) GetSecret(path, key string) (string, error) {
         return "", fmt.Errorf("failed to read secret: %v", err)
     }
 
-    if secret == nil {
+    if secret == nil || secret.Data == nil {
         return "", fmt.Errorf("secret not found at path: %s", path)
     }
 
-    value, ok := secret.Data[key].(string)
+    // In KV v2, secret data is under the "data" key
+    data, ok := secret.Data["data"].(map[string]interface{})
     if !ok {
-        return "", fmt.Errorf("key not found: %s", key)
+        return "", fmt.Errorf("invalid secret format at path: %s", path)
+    }
+
+    value, ok := data[key].(string)
+    if !ok {
+        return "", fmt.Errorf("key not found or not a string: %s", key)
     }
 
     return value, nil
+}
+
+
+func (vc *VaultConfig) GetVaultURL() string {
+    return vc.Client.Address()
 }
 
 func getVaultAddress() string {
