@@ -1,5 +1,5 @@
 # Use an official lightweight Go image
-FROM golang:1.20 as builder
+FROM golang:1.24 as builder
 
 # Set necessary environment variables for ARM64
 ENV CGO_ENABLED=0 \
