@@ -1,15 +1,36 @@
 package main
 
 import (
+	"os"
+    "github.com/joho/godotenv"
+
+	"github.com/gin-gonic/gin"
 	"log"
 	"main/internal/api"
 	dbRepo "main/internal/db"
 	"main/internal/service"
 	"main/pkg/config"
 	"main/pkg/db"
-
-	"github.com/gin-gonic/gin"
 )
+
+func init() {
+    // Load .env file first
+    if err := godotenv.Load(); err != nil {
+        log.Printf("Warning: .env file not found or error loading it: %v", err)
+    }
+
+    // Initialize Vault
+    secretsManager := config.GetSecretsManager()
+    if secretsManager != nil {
+        secrets := secretsManager.LoadSecrets()
+        // Set environment variables from Vault
+        for key, value := range secrets {
+            os.Setenv(key, value)
+        }
+    } else {
+        log.Println("Falling back to environment variables")
+    }
+}
 
 func main() {
 	// Cargar configuración
