@@ -1,40 +1,36 @@
-# Usa una imagen de Go basada en Alpine para compilar el servicio
-FROM golang:1.24-alpine AS builder
+# Usa la versión de Go compatible con tu proyecto
+FROM golang:1.24 AS builder
 
-# Instala dependencias necesarias para la compilación
-RUN apk add --no-cache git
+# Set the target platform for ARM (Raspberry Pi)
+ENV GOOS=linux
+ENV GOARCH=arm
+ENV GOARM=7
 
-# Define el directorio de trabajo dentro del contenedor
+# Set working directory
 WORKDIR /app
 
-# Copia los archivos de Go Modules y descarga dependencias
+# Copy Go modules files
 COPY go.mod go.sum ./
+
+# Download dependencies
 RUN go mod download
 
-# Copia el resto del código fuente al contenedor
+# Copy source code
 COPY . .
 
-# Configura GOARCH para compilar en la arquitectura correcta
-ARG TARGETPLATFORM
-RUN case "$TARGETPLATFORM" in \
-        "linux/arm64") GOARCH=arm64 ;; \
-        "linux/amd64") GOARCH=amd64 ;; \
-        *) GOARCH=amd64 ;; \
-    esac && \
-    CGO_ENABLED=0 GOOS=linux GOARCH=$GOARCH go build -o auth-service ./cmd/main.go
+# Verify files (debug)
+RUN ls -lah /app
 
-# Imagen final para producción basada en Alpine (más ligera)
-FROM alpine:latest
+# Build the service for ARM
+RUN CGO_ENABLED=0 go build -o auth-service ./cmd/main.go
 
-# Crea el directorio de trabajo
+# Final stage
+FROM arm32v7/debian:bullseye-slim
+
 WORKDIR /app
 
-# Copia el binario compilado desde el builder
+# Copy the binary from builder
 COPY --from=builder /app/auth-service .
 
-# Define el usuario no root por seguridad
-RUN adduser -D -g '' appuser && chown -R appuser /app
-USER appuser
-
-# Ejecuta el servicio
+# Run the service
 CMD ["/app/auth-service"]
