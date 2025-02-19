@@ -1,7 +1,7 @@
 # Use an official lightweight Go image
 FROM golang:1.24 as builder
 
-# Set necessary environment variables for ARM64
+# Set necessary environment variables for cross-compilation
 ENV CGO_ENABLED=0 \
     GOOS=linux \
     GOARCH=arm64
@@ -9,14 +9,17 @@ ENV CGO_ENABLED=0 \
 # Set working directory
 WORKDIR /app
 
-# Copy Go modules and install dependencies
+# Copy go modules and install dependencies
 COPY go.mod go.sum ./
-RUN go mod download
+RUN go mod tidy && go mod download
 
 # Copy source code
 COPY . .
 
-# Build the Go binary
+# Ensure dependencies are installed
+RUN go get -d ./...
+
+# Build the Go binary with explicit architecture
 RUN go build -o auth-service .
 
 # Use a minimal base image
