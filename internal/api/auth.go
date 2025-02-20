@@ -5,7 +5,7 @@ import (
 	"main/internal/models"
 	"main/internal/service"
 	"net/http"
-
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/gin-gonic/gin"
 )
 
