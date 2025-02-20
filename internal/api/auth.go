@@ -218,3 +218,33 @@ func (h *AuthHandler) UpdatePassword(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password changed successfully"})
 }
+
+// ... existing imports and code ...
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+    // Clear access token cookie
+    c.SetCookie(
+        "auth_token",
+        "",
+        -1,
+        "/",
+        "",
+        true,
+        true,
+    )
+
+    // Clear refresh token cookie
+    c.SetCookie(
+        "refresh_token",
+        "",
+        -1,
+        "/",
+        "",
+        true,
+        true,
+    )
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Logged out successfully",
+    })
+}

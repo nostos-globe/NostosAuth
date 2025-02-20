@@ -54,6 +54,7 @@ func main() {
 	r.POST("/register", handler.Register)
 	r.POST("/login", handler.Login)
 	//r.POST("/reset-password", handler.ResetPassword)
+	r.GET("/logout", handler.Logout) 
 	r.POST("/update-password", handler.UpdatePassword)
 	r.POST("/profile", handler.Profile)
     r.POST("/refresh-token", handler.RefreshToken)
