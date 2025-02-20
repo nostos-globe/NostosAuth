@@ -56,7 +56,7 @@ func main() {
 	//r.POST("/reset-password", handler.ResetPassword)
 	r.POST("/update-password", handler.UpdatePassword)
 	r.POST("/profile", handler.Profile)
-
+    r.POST("/refresh-token", handler.RefreshToken)
 	// Iniciar servidor
 	log.Println("Servidor corriendo en http://localhost:8080")
 	if err := r.Run(":8080"); err != nil {

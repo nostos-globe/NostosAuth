@@ -47,31 +47,118 @@ func (h *AuthHandler) Register(c *gin.Context) {
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
-	var req struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
+    var req struct {
+        Email    string `json:"email"`
+        Password string `json:"password"`
+    }
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
-		return
-	}
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+        return
+    }
 
-	user, err := h.UserRepo.GetUserByEmail(req.Email)
-	if err != nil || !h.AuthService.VerifyPassword(user.PasswordHash, req.Password) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-		return
-	}
+    user, err := h.UserRepo.GetUserByEmail(req.Email)
+    if err != nil || !h.AuthService.VerifyPassword(user.PasswordHash, req.Password) {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+        return
+    }
 
-	token, err := h.AuthService.GenerateToken(user)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
-		return
-	}
+    // Generate access token (JWT)
+    token, err := h.AuthService.GenerateToken(user)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+        return
+    }
 
-	c.JSON(http.StatusOK, gin.H{"token": token})
+    // Generate refresh token
+    refreshToken, err := h.AuthService.GenerateRefreshToken(user)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate refresh token"})
+        return
+    }
+
+    // Set access token cookie (24 hours)
+    c.SetCookie(
+        "auth_token",
+        token,
+        3600 * 24,
+        "/",
+        "",
+        true,
+        true,
+    )
+
+    // Set refresh token cookie (30 days)
+    c.SetCookie(
+        "refresh_token",
+        refreshToken,
+        3600 * 24 * 30,
+        "/",
+        "",
+        true,
+        true,
+    )
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Login successful",
+        "token": token,
+    })
 }
 
+// Add this new endpoint for token refresh
+func (h *AuthHandler) RefreshToken(c *gin.Context) {
+    // Get refresh token from cookie
+    refreshToken, err := c.Cookie("refresh_token")
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "No refresh token provided"})
+        return
+    }
+
+    // Validate refresh token
+    token, err := h.AuthService.ValidateRefreshToken(refreshToken)
+    if err != nil || !token.Valid {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
+        return
+    }
+
+    // Extract user claims
+    claims, ok := token.Claims.(jwt.MapClaims)
+    if !ok {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse token claims"})
+        return
+    }
+
+    // Get user from database
+    userID := uint(claims["user_id"].(float64))
+    user, err := h.UserRepo.GetUserByID(userID)
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+        return
+    }
+
+    // Generate new access token
+    newToken, err := h.AuthService.GenerateToken(user)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate new token"})
+        return
+    }
+
+    // Set new access token cookie
+    c.SetCookie(
+        "auth_token",
+        newToken,
+        3600 * 24,
+        "/",
+        "",
+        true,
+        true,
+    )
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Token refreshed successfully",
+        "token": newToken,
+    })
+}
 func (h *AuthHandler) Profile(c *gin.Context) {
 	var req struct {
 		Email string `json:"email"`
