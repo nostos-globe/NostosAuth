@@ -66,8 +66,13 @@ func (s *AuthService) GetUserIDFromToken(tokenString string) (uint, error) {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		userID := uint(claims["user_id"].(float64))
-		return userID, nil
+		// Check if "sub" claim exists and convert it to uint
+		if sub, exists := claims["sub"]; exists {
+			if userID, ok := sub.(float64); ok {
+				return uint(userID), nil
+			}
+		}
+		return 0, fmt.Errorf("invalid user ID in token")
 	}
 
 	return 0, fmt.Errorf("invalid token claims")

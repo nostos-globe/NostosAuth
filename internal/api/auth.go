@@ -233,40 +233,34 @@ func (h *AuthHandler) ValidateToken(c *gin.Context) {
 }
 
 func (h *AuthHandler) Profile(c *gin.Context) {
-	tokenString, err := c.Cookie("auth_token")
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "No token provided"})
-		return
-	}
+    tokenString, err := c.Cookie("auth_token")
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "No token provided"})
+        return
+    }
 
-	token, err := h.AuthService.ValidateAccessToken(tokenString)
-	if err != nil || !token.Valid {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-		return
-	}
+    userID, err := h.AuthService.GetUserIDFromToken(tokenString)
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+        return
+    }
 
-	userID, err := h.AuthService.GetUserIDFromToken(tokenString)
-	if err != nil || !token.Valid {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "No valid user in the token"})
-		return
-	}
+    user, err := h.UserRepo.GetUserByID(userID)
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+        return
+    }
 
-	user, err := h.UserRepo.GetUserByID(userID)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid User"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "User found successfully",
-		"user": gin.H{
-			"user_id":               user.UserID,
-			"name":                  user.Name,
-			"email":                 user.Email,
-			"failed_login_attempts": user.FailedLoginAttempts,
-			"account_locked":        user.AccountLocked,
-			"avatar_url":            user.AvatarURL,
-			"registration_date":     user.RegistrationDate,
-		},
-	})
+    c.JSON(http.StatusOK, gin.H{
+        "message": "User found successfully",
+        "user": gin.H{
+            "user_id":               user.UserID,
+            "name":                  user.Name,
+            "email":                 user.Email,
+            "failed_login_attempts": user.FailedLoginAttempts,
+            "account_locked":        user.AccountLocked,
+            "avatar_url":            user.AvatarURL,
+            "registration_date":     user.RegistrationDate,
+        },
+    })
 }
