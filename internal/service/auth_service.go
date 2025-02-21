@@ -12,8 +12,8 @@ import (
 )
 
 type AuthService struct {
-	userRepo *db.UserRepository
 	Config   *config.Config
+	UserRepo *db.UserRepository
 }
 
 func (s *AuthService) GenerateToken(user *models.User) (string, error) {

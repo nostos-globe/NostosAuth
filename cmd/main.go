@@ -46,7 +46,7 @@ func main() {
 
 	// Crear repositorio y servicios
 	repo := &dbRepo.UserRepository{DB: database}
-	authService := &service.AuthService{Config: cfg}
+	authService := &service.AuthService{Config: cfg, UserRepo: repo}
 	handler := &api.AuthHandler{UserRepo: repo, AuthService: authService}
 
 	// Iniciar Gin

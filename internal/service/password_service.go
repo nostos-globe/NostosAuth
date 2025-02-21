@@ -19,7 +19,7 @@ func (s *AuthService) VerifyPassword(hashed, password string) bool {
 }
 
 func (s *AuthService) CreatePasswordResetLink(email string) (string, error) {
-	user, err := s.userRepo.GetUserByEmail(email)
+	user, err := s.UserRepo.GetUserByEmail(email)
 	if err != nil {
 		return "", err
 	}
@@ -35,7 +35,7 @@ func (s *AuthService) CreatePasswordResetLink(email string) (string, error) {
 	user.ResetToken = resetToken
 	user.ResetTokenExpiry = time.Now().Add(1 * time.Hour)
 
-	if err := s.userRepo.UpdateUser(user); err != nil {
+	if err := s.UserRepo.UpdateUser(user); err != nil {
 		return "", err
 	}
 
@@ -46,7 +46,7 @@ func (s *AuthService) CreatePasswordResetLink(email string) (string, error) {
 
 func (s *AuthService) ResetPasswordWithToken(token, newPassword string) error {
 	// Find user by reset token
-	user, err := s.userRepo.GetUserByResetToken(token)
+	user, err := s.UserRepo.GetUserByResetToken(token)
 	if err != nil {
 		return err
 	}
@@ -67,5 +67,5 @@ func (s *AuthService) ResetPasswordWithToken(token, newPassword string) error {
 	user.ResetToken = ""
 	user.ResetTokenExpiry = time.Time{}
 
-	return s.userRepo.UpdateUser(user)
+	return s.UserRepo.UpdateUser(user)
 }
