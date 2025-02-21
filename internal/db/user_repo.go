@@ -14,6 +14,12 @@ func (repo *UserRepository) CreateUser(user *models.User) error {
 	return repo.DB.Create(user).Error
 }
 
+func (repo *UserRepository) GetUserByResetToken(token string) (*models.User, error) {
+	var user models.User
+	err := repo.DB.Where("reset_token = ?", token).First(&user).Error
+	return &user, err
+}
+
 func (repo *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 	var user models.User
 	err := repo.DB.Where("email = ?", email).First(&user).Error

@@ -6,12 +6,14 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 
+	"main/internal/db"
 	"main/internal/models"
 	"main/pkg/config"
 )
 
 type AuthService struct {
-	Config *config.Config
+	userRepo *db.UserRepository
+	Config   *config.Config
 }
 
 func (s *AuthService) GenerateToken(user *models.User) (string, error) {

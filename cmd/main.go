@@ -2,34 +2,36 @@ package main
 
 import (
 	"os"
-    "github.com/joho/godotenv"
 
-	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+
 	"log"
 	"main/internal/api"
 	dbRepo "main/internal/db"
 	"main/internal/service"
 	"main/pkg/config"
 	"main/pkg/db"
+
+	"github.com/gin-gonic/gin"
 )
 
 func init() {
-    // Load .env file first
-    if err := godotenv.Load(); err != nil {
-        log.Printf("Warning: .env file not found or error loading it: %v", err)
-    }
+	// Load .env file first
+	if err := godotenv.Load(); err != nil {
+		log.Printf("Warning: .env file not found or error loading it: %v", err)
+	}
 
-    // Initialize Vault
-    secretsManager := config.GetSecretsManager()
-    if secretsManager != nil {
-        secrets := secretsManager.LoadSecrets()
-        // Set environment variables from Vault
-        for key, value := range secrets {
-            os.Setenv(key, value)
-        }
-    } else {
-        log.Println("Falling back to environment variables")
-    }
+	// Initialize Vault
+	secretsManager := config.GetSecretsManager()
+	if secretsManager != nil {
+		secrets := secretsManager.LoadSecrets()
+		// Set environment variables from Vault
+		for key, value := range secrets {
+			os.Setenv(key, value)
+		}
+	} else {
+		log.Println("Falling back to environment variables")
+	}
 }
 
 func main() {
@@ -51,13 +53,15 @@ func main() {
 	r := gin.Default()
 
 	// Routes
-    r.POST("/register", handler.Register)
-    r.POST("/login", handler.Login)
-    r.POST("/logout", handler.Logout)
-    r.POST("/validate", handler.ValidateToken)
-    r.POST("/update-password", handler.UpdatePassword) 
-    r.GET("/profile", handler.Profile)
-    r.POST("/refresh-token", handler.RefreshToken)
+	r.POST("/register", handler.Register)
+	r.POST("/login", handler.Login)
+	r.POST("/logout", handler.Logout)
+	r.POST("/validate", handler.ValidateToken)
+	r.POST("/forgot-password", handler.RequestPasswordReset)
+	r.POST("/reset-password", handler.ResetPassword)
+	r.POST("/update-password", handler.UpdatePassword)
+	r.GET("/profile", handler.Profile)
+	r.POST("/refresh-token", handler.RefreshToken)
 
 	// Iniciar servidor
 	log.Println("Servidor corriendo en http://localhost:8080")

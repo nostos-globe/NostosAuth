@@ -260,3 +260,44 @@ func (h *AuthHandler) Profile(c *gin.Context) {
 		},
 	})
 }
+func (h *AuthHandler) RequestPasswordReset(c *gin.Context) {
+    var req struct {
+        Email string `json:"email"`
+    }
+
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+        return
+    }
+
+    resetLink, err := h.AuthService.CreatePasswordResetLink(req.Email)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create reset link"})
+        return
+    }
+
+    // In production, send this link via email
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Reset link has been sent to your email",
+        "reset_link": resetLink, // Remove this in production
+    })
+}
+
+func (h *AuthHandler) ResetPassword(c *gin.Context) {
+    var req struct {
+        Token       string `json:"token"`
+        NewPassword string `json:"new_password"`
+    }
+
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+        return
+    }
+
+    if err := h.AuthService.ResetPasswordWithToken(req.Token, req.NewPassword); err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired reset token"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "Password reset successfully"})
+}
