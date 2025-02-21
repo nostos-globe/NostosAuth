@@ -1,19 +1,6 @@
 package service
 
-import (
-	"time"
-	"fmt"
-	"github.com/golang-jwt/jwt/v4"
-	"golang.org/x/crypto/bcrypt"
-
-	"main/internal/models"
-	"main/pkg/config"
-)
-
-type AuthService struct {
-	Config *config.Config
-}
-
+import "golang.org/x/crypto/bcrypt"
 
 func (s *AuthService) HashPassword(password string) (string, error) {
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
