@@ -52,3 +52,23 @@ func (s *AuthService) ValidateRefreshToken(tokenString string) (*jwt.Token, erro
 		return []byte(s.Config.JWTSecret + "_refresh"), nil
 	})
 }
+
+func (s *AuthService) GetUserIDFromToken(tokenString string) (uint, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(s.Config.JWTSecret), nil
+	})
+
+	if err != nil {
+		return 0, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		userID := uint(claims["user_id"].(float64))
+		return userID, nil
+	}
+
+	return 0, fmt.Errorf("invalid token claims")
+}
