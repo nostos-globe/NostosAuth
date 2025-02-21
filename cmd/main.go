@@ -50,14 +50,15 @@ func main() {
 	// Iniciar Gin
 	r := gin.Default()
 
-	// Rutas
-	r.POST("/register", handler.Register)
-	r.POST("/login", handler.Login)
-	//r.POST("/reset-password", handler.ResetPassword)
-	r.GET("/logout", handler.Logout) 
-	r.POST("/update-password", handler.UpdatePassword)
-	r.POST("/profile", handler.Profile)
+	// Routes
+    r.POST("/register", handler.Register)
+    r.POST("/login", handler.Login)
+    r.POST("/logout", handler.Logout)
+    r.POST("/validate", handler.ValidateToken)
+    r.POST("/update-password", handler.UpdatePassword) 
+    r.GET("/profile", handler.Profile)
     r.POST("/refresh-token", handler.RefreshToken)
+
 	// Iniciar servidor
 	log.Println("Servidor corriendo en http://localhost:8080")
 	if err := r.Run(":8080"); err != nil {

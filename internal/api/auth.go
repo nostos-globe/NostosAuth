@@ -63,32 +63,19 @@ func (h *AuthHandler) Login(c *gin.Context) {
         return
     }
 
-    // Generate access token (JWT)
     token, err := h.AuthService.GenerateToken(user)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
         return
     }
 
-    // Generate refresh token
     refreshToken, err := h.AuthService.GenerateRefreshToken(user)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate refresh token"})
         return
     }
 
-    // Set access token cookie (24 hours)
-    c.SetCookie(
-        "auth_token",
-        token,
-        3600 * 24,
-        "/",
-        "",
-        true,
-        true,
-    )
-
-    // Set refresh token cookie (30 days)
+    // Set only refresh token as httpOnly cookie (30 days)
     c.SetCookie(
         "refresh_token",
         refreshToken,
@@ -101,11 +88,68 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
     c.JSON(http.StatusOK, gin.H{
         "message": "Login successful",
-        "token": token,
+        "accessToken": token,
     })
 }
 
-// Add this new endpoint for token refresh
+func (h *AuthHandler) Logout(c *gin.Context) {
+    // Clear access token cookie
+    c.SetCookie(
+        "auth_token",
+        "",
+        -1,
+        "/",
+        "",
+        true,
+        true,
+    )
+
+    // Clear refresh token cookie
+    c.SetCookie(
+        "refresh_token",
+        "",
+        -1,
+        "/",
+        "",
+        true,
+        true,
+    )
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Logged out successfully",
+    })
+}
+
+func (h *AuthHandler) UpdatePassword(c *gin.Context) {
+	var req struct {
+		Email       string `json:"email"`
+		OldPassword string `json:"old password"`
+		NewPassword string `json:"new password"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	user, err := h.UserRepo.GetUserByEmail(req.Email)
+	if err != nil || !h.AuthService.VerifyPassword(user.PasswordHash, req.OldPassword) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
+
+	hashedPassword, err := h.AuthService.HashPassword(req.NewPassword)
+
+	user.PasswordHash = hashedPassword
+
+	if err := h.UserRepo.UpdateUser(user); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Failed to update password"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Password changed successfully"})
+}
+
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
     // Get refresh token from cookie
     refreshToken, err := c.Cookie("refresh_token")
@@ -159,6 +203,31 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
         "token": newToken,
     })
 }
+
+func (h *AuthHandler) ValidateToken(c *gin.Context) {
+    // Get access token from Authorization header
+    authHeader := c.GetHeader("Authorization")
+    if authHeader == "" {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "No token provided"})
+        return
+    }
+
+    // Remove "Bearer " prefix if present
+    tokenString := authHeader
+    if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+        tokenString = authHeader[7:]
+    }
+
+    // Validate the access token
+    token, err := h.AuthService.ValidateAccessToken(tokenString)
+    if err != nil || !token.Valid {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "Token is valid"})
+}
+
 func (h *AuthHandler) Profile(c *gin.Context) {
 	var req struct {
 		Email string `json:"email"`
@@ -189,62 +258,3 @@ func (h *AuthHandler) Profile(c *gin.Context) {
 	})
 }
 
-func (h *AuthHandler) UpdatePassword(c *gin.Context) {
-	var req struct {
-		Email       string `json:"email"`
-		OldPassword string `json:"old password"`
-		NewPassword string `json:"new password"`
-	}
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
-		return
-	}
-
-	user, err := h.UserRepo.GetUserByEmail(req.Email)
-	if err != nil || !h.AuthService.VerifyPassword(user.PasswordHash, req.OldPassword) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-		return
-	}
-
-	hashedPassword, err := h.AuthService.HashPassword(req.NewPassword)
-
-	user.PasswordHash = hashedPassword
-
-	if err := h.UserRepo.UpdateUser(user); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Failed to update password"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Password changed successfully"})
-}
-
-// ... existing imports and code ...
-
-func (h *AuthHandler) Logout(c *gin.Context) {
-    // Clear access token cookie
-    c.SetCookie(
-        "auth_token",
-        "",
-        -1,
-        "/",
-        "",
-        true,
-        true,
-    )
-
-    // Clear refresh token cookie
-    c.SetCookie(
-        "refresh_token",
-        "",
-        -1,
-        "/",
-        "",
-        true,
-        true,
-    )
-
-    c.JSON(http.StatusOK, gin.H{
-        "message": "Logged out successfully",
-    })
-}

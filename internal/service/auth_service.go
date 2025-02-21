@@ -14,15 +14,6 @@ type AuthService struct {
 	Config *config.Config
 }
 
-func (s *AuthService) HashPassword(password string) (string, error) {
-	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return string(hashed), err
-}
-
-func (s *AuthService) VerifyPassword(hashed, password string) bool {
-	return bcrypt.CompareHashAndPassword([]byte(hashed), []byte(password)) == nil
-}
-
 func (s *AuthService) GenerateToken(user *models.User) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":   user.UserID,
@@ -42,6 +33,15 @@ func (s *AuthService) GenerateRefreshToken(user *models.User) (string, error) {
     
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
     return token.SignedString([]byte(s.Config.JWTSecret + "_refresh"))
+}
+
+func (s *AuthService) ValidateAccessToken(tokenString string) (*jwt.Token, error) {
+    return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+            return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+        }
+        return []byte(s.Config.JWTSecret), nil
+    })
 }
 
 func (s *AuthService) ValidateRefreshToken(tokenString string) (*jwt.Token, error) {
