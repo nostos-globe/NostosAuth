@@ -133,7 +133,6 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		true,
 	)
 
-	// Clear refresh token cookie
 	c.SetCookie(
 		"refresh_token",
 		"",
@@ -180,28 +179,24 @@ func (h *AuthHandler) UpdatePassword(c *gin.Context) {
 }
 
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
-	// Get refresh token from cookie
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "No refresh token provided"})
 		return
 	}
 
-	// Validate refresh token
 	token, err := h.AuthService.ValidateRefreshToken(refreshToken)
 	if err != nil || !token.Valid {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
 		return
 	}
 
-	// Extract user claims
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse token claims"})
 		return
 	}
 
-	// Get user from database
 	userID := uint(claims["user_id"].(float64))
 	user, err := h.UserRepo.GetUserByID(userID)
 	if err != nil {
@@ -209,14 +204,12 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	// Generate new access token
 	newToken, err := h.AuthService.GenerateToken(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate new token"})
 		return
 	}
 
-	// Set new access token cookie
 	c.SetCookie(
 		"auth_token",
 		newToken,
@@ -234,14 +227,12 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 }
 
 func (h *AuthHandler) ValidateToken(c *gin.Context) {
-	// Get access token from cookie
 	tokenString, err := c.Cookie("auth_token")
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "No token provided"})
 		return
 	}
 
-	// Validate the access token
 	token, err := h.AuthService.ValidateAccessToken(tokenString)
 	if err != nil || !token.Valid {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
@@ -281,6 +272,7 @@ func (h *AuthHandler) Profile(c *gin.Context) {
 		},
 	})
 }
+
 func (h *AuthHandler) RequestPasswordReset(c *gin.Context) {
 	var req struct {
 		Email string `json:"email"`
@@ -297,7 +289,6 @@ func (h *AuthHandler) RequestPasswordReset(c *gin.Context) {
 		return
 	}
 
-	// In production, send this link via email
 	c.JSON(http.StatusOK, gin.H{
 		"message":    "Reset link has been sent to your email",
 		"reset_link": resetLink, // Remove this in production
