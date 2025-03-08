@@ -64,8 +64,8 @@ func main() {
 	r.POST("/refresh-token", handler.RefreshToken)
 
 	// Iniciar servidor
-	log.Println("Servidor corriendo en http://localhost:8080")
-	if err := r.Run(":8080"); err != nil {
+	log.Println("Servidor corriendo en http://localhost:8081")
+	if err := r.Run(":8081"); err != nil {
 		log.Fatalf("Error al iniciar el servidor: %v", err)
 	}
 }
