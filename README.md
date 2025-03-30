@@ -1,92 +1,95 @@
 # Authentication Service
 
-Este es un servicio de autenticación desarrollado en Go. Proporciona endpoints para el registro, inicio de sesión, manejo de tokens JWT y recuperación de contraseña.
+This is an authentication service developed in Go. It provides endpoints for registration, login, JWT token management, and password recovery.
 
-## Características
+---
 
-- Registro de usuarios
-- Autenticación mediante JWT
-- Renovación de tokens
-- Recuperación de contraseña
-- Manejo de sesiones seguras
+## 🚀 Features
 
-## Endpoints
+- User registration  
+- JWT authentication  
+- Token renewal  
+- Password recovery  
+- Secure session management  
 
-### Registro de Usuario
+---
+
+## 📌 Endpoints
+
+### 🔹 User Registration
 ```http
 POST /register
 ```
-Registra un nuevo usuario.
+Registers a new user.
 
-### Inicio de Sesión
+### 🔹 Login
 ```http
 POST /login
 ```
-Autentica un usuario y emite un token JWT.
+Authenticates a user and issues a JWT token.
 
-### Renovación de Token
+### 🔹 Token Renewal
 ```http
 POST /refresh-token
 ```
-Genera un nuevo token de acceso usando un refresh token.
+Generates a new access token using a refresh token.
 
-### Cierre de Sesión
+### 🔹 Logout
 ```http
 POST /logout
 ```
-Invalida el refresh token del usuario.
+Invalidates the user's refresh token.
 
-### Información del Usuario Autenticado
+### 🔹 Authenticated User Information
 ```http
-POST /profile
+GET /profile
 ```
-Obtiene la información del usuario autenticado.
+Retrieves information about the authenticated user.
 
-### Recuperación de Contraseña
+### 🔹 Password Recovery
 ```http
 POST /forgot-password
 ```
-Envía un enlace para restablecer la contraseña.
+Sends a link to reset the password.
 
-### Restablecimiento de Contraseña
+### 🔹 Password Reset
 ```http
 POST /reset-password
 ```
-Permite cambiar la contraseña con un token de recuperación.
+Allows changing the password using a recovery token.
 
-### Cambio de Contraseña
+### 🔹 Password Change
 ```http
 POST /update-password
 ```
-Permite cambiar la contraseña de un usuario autenticado.
+Allows an authenticated user to change their password.
 
-## Instalación y Configuración
+---
 
-### Prerrequisitos
-- [Go](https://golang.org/) instalado
-- Base de datos configurada (MySQL, PostgreSQL, etc.)
+## ⚙️ Installation and Configuration
 
-### Instalación
-Clona el repositorio y navega al directorio del proyecto:
-```sh
-git clone <repositorio>
-cd <directorio>
+### Prerequisites
+
+- Go installed  
+- Configured database (MySQL, PostgreSQL, etc.)
+
+### Installation
+
+Clone the repository and navigate to the project directory:
+
+```bash
+git clone https://github.com/nostos-globe/NostosAuth
+cd NostosAuth
 ```
 
-Instala las dependencias:
-```sh
+Install dependencies:
+
+```bash
 go mod tidy
 ```
 
-### Configuración
-Configura las variables de entorno en un archivo `.env`:
-```
-PORT=8080
-DATABASE_URL=<URL_de_tu_DB>
-JWT_SECRET=<secreto_para_tokens>
-```
+### Execution
 
-### Ejecución
-```sh
-go run main.go
+```bash
+go run cmd/main.go
 ```

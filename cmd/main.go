@@ -34,6 +34,7 @@ func init() {
 	}
 }
 
+
 func main() {
 	// Cargar configuración
 	cfg := config.LoadConfig()
@@ -65,7 +66,7 @@ func main() {
 
 	// Iniciar servidor
 	log.Println("Servidor corriendo en http://localhost:8081")
-	if err := r.Run(":8081"); err != nil {
+	if err := r.Run(":8082"); err != nil {
 		log.Fatalf("Error al iniciar el servidor: %v", err)
 	}
 }

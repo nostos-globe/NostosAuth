@@ -19,7 +19,6 @@ RUN ls -lah /app
 # Compila el servicio
 RUN go build -o auth-service ./cmd/main.go
 
-
 # Imagen final para producción (más ligera)
 FROM gcr.io/distroless/base-debian12
 
