@@ -42,6 +42,38 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
+	token, err := h.AuthService.GenerateToken(user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	refreshToken, err := h.AuthService.GenerateRefreshToken(user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate refresh token"})
+		return
+	}
+
+	c.SetCookie(
+		"auth_token",
+		token,
+		3600*24, // 24 hours
+		"/",
+		"",
+		true, // Secure flag
+		true, // HttpOnly flag
+	)
+
+	c.SetCookie(
+		"refresh_token",
+		refreshToken,
+		3600*24*30,
+		"/",
+		"",
+		true,
+		true,
+	)
+
 	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully"})
 }
 
