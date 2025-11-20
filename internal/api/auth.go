@@ -2,9 +2,11 @@ package api
 
 import (
 	"main/internal/db"
+	"main/internal/events"
 	"main/internal/models"
 	"main/internal/service"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
@@ -13,6 +15,7 @@ import (
 type AuthHandler struct {
 	UserRepo    *db.UserRepository
 	AuthService *service.AuthService
+	Events      *events.Publisher
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
@@ -126,6 +129,20 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	user.FailedLoginAttempts = 0
 	h.UserRepo.UpdateUser(user)
+
+	ip := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+
+	// 🔔 Evento auth.login
+	if h.Events != nil {
+		evt := events.AuthLoginEvent{
+			UserID:    uint(user.UserID),
+			IP:        ip,
+			UserAgent: userAgent,
+			At:        time.Now(),
+		}
+		_ = h.Events.Publish("auth.login", evt)
+	}
 
 	c.SetCookie(
 		"auth_token",

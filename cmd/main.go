@@ -4,10 +4,12 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/nats-io/nats.go"
 
 	"log"
 	"main/internal/api"
 	dbRepo "main/internal/db"
+	"main/internal/events"
 	"main/internal/service"
 	"main/pkg/config"
 	"main/pkg/db"
@@ -34,10 +36,10 @@ func init() {
 	}
 }
 
-
 func main() {
 	// Cargar configuración
 	cfg := config.LoadConfig()
+	nc, err := nats.Connect(cfg.NatsUrl)
 
 	// Conectar a la base de datos
 	database, err := db.ConnectDB(cfg)
@@ -47,8 +49,9 @@ func main() {
 
 	// Crear repositorio y servicios
 	repo := &dbRepo.UserRepository{DB: database}
+	publisher := events.NewPublisher(nc)
 	authService := &service.AuthService{Config: cfg, UserRepo: repo}
-	handler := &api.AuthHandler{UserRepo: repo, AuthService: authService}
+	handler := &api.AuthHandler{UserRepo: repo, AuthService: authService, Events: publisher}
 
 	// Iniciar Gin
 	r := gin.Default()
